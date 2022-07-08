@@ -231,7 +231,7 @@ export const getPageReRoutes = <L extends string>({
 
   const redirects = locales.reduce((acc, locale) => {
     const localePath = getPath(locale)
-    const destination = `${locale === defaultLocale ? '' : `/${locale}`}${sourceToDestination(localePath)}`
+    const destination = `${sourceToDestination(localePath)}`
 
     return [
       ...acc,
