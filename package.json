@@ -19,6 +19,7 @@
   ],
   "scripts": {
     "build": "`rm ./*.d.ts ./*.js.map ./*.js` npx tsc",
+    "prepare": "npm run build",
     "lint": "npx eslint --ignore-path .gitignore .",
     "test": "jest",
     "prerelease": "yon lint && yon build",
