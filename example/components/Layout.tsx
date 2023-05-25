@@ -1,54 +1,46 @@
-import React, { ReactNode } from 'react'
 import Link from 'next-translate-routes/link'
-import NextLink, { LinkProps } from 'next/link'
 import Head from 'next/head'
+import NextLink, { LinkProps } from 'next/link'
 import { useRouter } from 'next/router'
+import React, { ReactNode } from 'react'
 
 type Props = {
   children?: ReactNode
   title?: string
 }
 
-const Nav: React.FC<{ LinkComponent: React.ComponentType<LinkProps> }> = ({ LinkComponent }) => {
+const Nav: React.FC<{ LinkComponent: React.ComponentType<React.PropsWithChildren<LinkProps>> }> = ({
+  LinkComponent,
+}) => {
   const { locale, pathname, query } = useRouter()
   const newLocale = locale === 'en' ? 'fr' : 'en'
 
   return (
     <nav>
-      <LinkComponent href="/">
-        <a>Home</a>
-      </LinkComponent>
+      <LinkComponent href="/">Home</LinkComponent>
       {' | '}
-      <LinkComponent href="/about">
-        <a>About</a>
-      </LinkComponent>
+      <LinkComponent href={{ pathname: '/about-us' }}>About</LinkComponent>
       {' | '}
-      <LinkComponent href="/news">
-        <a>News</a>
-      </LinkComponent>
+      <LinkComponent href="/news">News</LinkComponent>
       {' | '}
-      <LinkComponent href="/rewrites">
-        <a>Rewrites</a>
-      </LinkComponent>
+      <LinkComponent href="/rewrites">Rewrites</LinkComponent>
       {' | '}
-      <LinkComponent href={{ pathname: '/docs/[type]/[[...pathParts]]', query: { type: 'api' } }}>
-        <a>Api docs</a>
-      </LinkComponent>
+      <LinkComponent href="/docs/server">Server docs</LinkComponent>
       {' - '}
       <LinkComponent href={{ pathname: '/docs/[type]/[[...pathParts]]', query: { type: 'client' } }}>
-        <a>Client docs</a>
+        Client docs
       </LinkComponent>
       {' | '}
-      <LinkComponent href={{ pathname: '/users' }}>
-        <a>Users List</a>
-      </LinkComponent>
+      <LinkComponent href={{ pathname: '/users' }}>Users List</LinkComponent>
       {' | '}
-      <LinkComponent href="https://hozana.org/en">
-        <a>External link</a>
-      </LinkComponent>
+      <LinkComponent href="/random/path">Random</LinkComponent>
+      {' | '}
+      <LinkComponent href="https://hozana.org/en">External link</LinkComponent>
+      {' | '}
+      <LinkComponent href={{ pathname, query, hash: 'footer' }}>Hash link</LinkComponent>
       {' | '}
       <LinkComponent href={{ pathname, query }} locale={newLocale}>
-        <a>{newLocale}</a>
+        {newLocale}
       </LinkComponent>
     </nav>
   )
@@ -70,7 +62,7 @@ const Layout = ({ children, title = 'This is the default title' }: Props) => {
         <Nav LinkComponent={NextLink} />
       </header>
       {children}
-      <footer>
+      <footer id="footer">
         <hr />
         <blockquote>{`locale: ${locale}, pathname: ${pathname}, query: ${JSON.stringify(query)}`}</blockquote>
       </footer>

@@ -1,8 +1,9 @@
-import React from 'react'
+import type { NextPage } from 'next'
 import Link from 'next-translate-routes/link'
 import { useRouter } from 'next/router'
+import React from 'react'
+
 import Layout from '../../components/Layout'
-import type { NextPage } from 'next'
 
 export const getServerSideProps = async () => ({ props: {} })
 
@@ -46,6 +47,11 @@ const RandomPage: NextPage = () => {
         <Link href="/">
           <a>Go home</a>
         </Link>
+        <Link href={{ pathname, query: { pathParts: [...pathPartsArray, nextPart] } }}>`/{nextPart}`</Link>
+        to path.
+      </p>
+      <p>
+        <Link href="/">Go home</Link>
       </p>
     </Layout>
   )

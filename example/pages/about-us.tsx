@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react'
 import Link from 'next-translate-routes/link'
+import { useRouter } from 'next/router'
+import React, { useEffect } from 'react'
 
 import Layout from '../components/Layout'
-import { useRouter } from 'next/router'
 
 const AboutPage = () => {
   const { replace: routerReplace } = useRouter()
@@ -18,9 +18,7 @@ const AboutPage = () => {
       <p>This is the about page</p>
       <p>It will redirect to homepage using router.replace after 5 seconds.</p>
       <p>
-        <Link href="/">
-          <a>Go home</a>
-        </Link>
+        <Link href="/">Go home</Link>
       </p>
     </Layout>
   )

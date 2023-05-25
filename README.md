@@ -3,28 +3,39 @@
 Translated routing and more for Next using Next regular file-base routing system
 
 - [Features](#features)
+  - [Yet unsupported features](#yet-unsupported-features)
 - [Motivation](#motivation)
 - [How to](#how-to)
   - [Basic usage](#basic-usage)
     1. [Wrap you next config with the next-translate-routes plugin](#1-wrap-you-next-config-with-the-next-translate-routes-plugin)
     2. [Define your routes](#2-define-your-routes)
-    3. [Wrap you \_app component with the withTranslateRoutes hoc](#3-wrap-you-app-component-with-the-withtranslateroutes-hoc)
-    4. [Use next-translate-routes/link instead of next/link](#4-use-next-translate-routeslink-instead-of-nextlink)
+    3. [Wrap your `\_app` component with the `withTranslateRoutes` hoc](#3-wrap-you-_app-component-with-the-withtranslateroutes-hoc)
+    4. [Use `next-translate-routes/link` instead of `next/link`](#4-use-next-translate-routeslink-instead-of-nextlink)
+    5. [Use `next-translate-routes/router instead` of `next/router` for singleton router (default export)](#5-use-next-translate-routesrouter-instead-of-nextrouter-for-singleton-router-default-export)
   - [Advanced usage](#advanced-usage)
     - [Configuration](#configuration)
+    - [Translate/untranslate urls](#translateuntranslate-urls)
+    - [Alternate pages (SEO)](#alternate-pages-seo)
+    - [Sitemap](#sitemap)
     - [Constrained dynamic paths segments](#constrained-dynamic-paths-segments)
     - [Ignoring a path part](#ignoring-a-path-part)
     - [Complex paths segments](#complex-paths-segments)
     - [Custom route tree](#custom-route-tree)
-- [How does it works](#how-does-it-works)
+    - [Outside Next](#outside-next)
+    - [Fallback languages](#fallback-languages)
+- [Known issue](#known-issues)
+  - [Middleware with Next >=12.2.0](#middleware-with-watcher-next-1220)
+  - [Optional catch all with rewrites](#optional-catch-all-with-rewrites)
+  - [With @sentry/nextjs](#with-sentrynextjs)
+- [How does it work](#how-does-it-work)
 
 ## Features
 
 - **Translated paths segments**  
   Ex: `/contact-us` and `/fr/contactez-nous`.
-- **Complex paths segments** (path-to-regexp synthax)  
+- **Complex paths segments** (path-to-regexp syntax)  
   Ex: `/:id{-:slug}?/`
-- **Constrained dynamic paths segments** (path-to-regexp synthax)  
+- **Constrained dynamic paths segments** (path-to-regexp syntax)  
   Ex: `/:id(\\d+)/`
 - **No duplicated content (SEO)**  
   Simple rewrites would make a page accessible with 2 different urls which is bad for SEO.
@@ -35,7 +46,15 @@ Translated routing and more for Next using Next regular file-base routing system
 
 See it in action: <https://codesandbox.io/s/github/hozana/next-translate-routes/tree/master>
 
-__Note__: Next-translate-routes does not work with Next html static export, since internationalized routing is among [static html export unsupported features](https://nextjs.org/docs/advanced-features/static-html-export#unsupported-features).
+### Yet unsupported features
+
+- Html static export is not and will never be supported by next-translate-routes, since internationalized routing is among [static html export unsupported features](https://nextjs.org/docs/advanced-features/static-html-export#unsupported-features).
+- Domain routing is not supported yet but should be in the future.
+- Next 13 is not supported yet too. There is two steps here:
+  - supporting next 13 without `app/` directory: it nearly works, but there is some issues. To fix them, we need to figure out what is optimistic navigation. If anyone has a clue, please open an issue to discuss it!
+  - supporting the `app/` directory. And that won't be a piece of cake...
+
+Any PR are welcome!
 
 ## Motivation
 
@@ -105,7 +124,7 @@ In `/pages/section/`, the `_routes.json` file could look like this.
     "default": "article", // Overwrite the default page path (fallback)
     "es": "articulo"
   },
-  "page2": "definition", // Overwrite the page path for all language
+  "page2": "definition" // Overwrite the page path for all language
 }
 ```
 
@@ -140,12 +159,12 @@ for each language or only some language, like "blog" in `pt` here:
 - page1 will in fact be accessible at `/blog/section/article` in `pt`,
 - page2 will in fact be accessible at `/blog/section/definition` in `pt`.
 
-#### 3. Wrap you \_app component with the withTranslateRoutes hoc
+#### 3. Wrap you `\_app` component with the `withTranslateRoutes` hoc
 
 ```js
 // `/pages/_app.js`
-import { App } from 'next/app'
 import { withTranslateRoutes } from 'next-translate-routes'
+import { App } from 'next/app'
 
 export default withTranslateRoutes(App)
 ```
@@ -165,14 +184,13 @@ const App = ({ Component, pageProps }) => {
 export default withTranslateRoutes(App)
 ```
 
-#### 4. Use next-translate-routes/link instead of next/link
+#### 4. Use `next-translate-routes/link` instead of `next/link`
 
 next-translate-routes extends Next Link to translate routes automatically: import it from 'next-translate-routes/link' instead of 'next/link' and use as you ever did.
 
 ```jsx
-import React, { useEffect, useState } from 'react'
-
 import Link from 'next-translate-routes/link'
+import React, { useEffect, useState } from 'react'
 
 const MyLinks = (props) => {
   const { locales } = useRouter()
@@ -180,7 +198,7 @@ const MyLinks = (props) => {
   return (
     <>
       <Link href="/file/path/to/page">Current locale</Link>
-      {locale.map((locale) => (
+      {locales.map((locale) => (
         <Link
           href={{ pathname: '/file/path/to/[dynamic]/page', query: { dynamic: props.param, otherQueryParam: 'foo' } }}
           locale={locale}
@@ -188,11 +206,20 @@ const MyLinks = (props) => {
         >
           {locale}
         </Link>
-      )}
+      ))}
     </>
   )
 }
+```
 
+#### 5. Use `next-translate-routes/router instead` of `next/router` for singleton router (default export)
+
+You can use `next-translate-routes/router` everywhere instead of `next/router` but it is only necessary for the singleton router (which is rarely used).
+
+```typescript
+import singletonRouter from 'next-translate-routes/router'
+// Indead of:
+import singletonRouter from 'next/router'
 ```
 
 ### Advanced usage
@@ -208,27 +235,26 @@ type NTRConfig = {
   debug?: boolean
   routesDataFileName?: string
   routesTree?: TRouteBranch<L>
+  pagesDirectory?: string
 }
 ```
 
 <details>
   <summary>See more about TRouteBranch</summary>
 
-  If `i18n.locales` is set to `['en', 'fr']`, then the `TRouteBranch` generic `L` prop would be `'en' | 'fr'`. A non-generic equivalent of `TRouteBranch<'en' | 'fr'>` would be the following.
-
-  ```ts
-  /** Non generic version of the TRouteBranch type for better readability, where the generi L prop is set to `'en' | 'fr'` */
-  type TRouteBranchEnFr = {
-    name: string
-    en: string
-    fr: string
-    children: TRouteBranchEnFr[]
-  }
-  ```
+> If `i18n.locales` is set to `['en', 'fr']`, then the `TRouteBranch` generic `L` prop would be `'en' | 'fr'`. A non-generic equivalent of `TRouteBranch<'en' | 'fr'>` would be the following.
+>
+> ```ts
+> /** Non generic version of the TRouteBranch type for better readability, where the generi L prop is set to `'en' | 'fr'` */
+> type TRouteBranchEnFr = {
+>   name: string
+>   en: string
+>   fr: string
+>   children: TRouteBranchEnFr[]
+> }
+> ```
 
 </details>
-
-&nbsp;
 
 ```js
   translateRoutes: {
@@ -237,9 +263,44 @@ type NTRConfig = {
   }
 ```
 
-When `debug` is set to true, you will get some logs, both in the server terminal and in the browser console.
+When `debug` is set to true, you will get some logs, both in the server terminal and in the browser console. By default, you will get some logs for each `router.push` and `router.replace`, but not `router.prefetch`. To enable logs for `router.prefetch` too, you can set debug to `withPrefetch`.
+
 If `routesDataFileName` is defined, to `'routesData'` for example, next-translate-routes will look in the `pages` folder for files named `routesData.json` or `routesData.yaml` instead of the default `_routes.json` or `_routes.yaml`.
+
 If `routesTree` is defined, next-translate-routes won't parse the `pages` folder and will use the given object as the routes tree. If you uses it, beware of building correctly the routes tree to avoid bugs.
+
+You can see and edit these while your app is running to debug things, using `__NEXT_TRANSLATE_ROUTES_DATA` in the browser console. For exemple, executing `__NEXT_TRANSLATE_ROUTES_DATA.debug = true` will activate the logs on `router.push` and `router.replace`.
+
+#### Translate/untranslate urls
+
+Two helpers are exposed to translate/untranslate urls:
+
+- `fileUrlToUrl` transforms a file url into a translated url
+- `urlToFileUrl` transforms a translated url into a file url
+
+Both of them take 2 arguments: an url and a locale. `fileUrlToUrl` can take an extra option argument to prevent it to throw and return undefined instead if the file url is not found: `{ throwOnError: false }`.
+
+#### Alternate pages (SEO)
+
+You will probably want to indicate alternate pages for SEO optimization. Here is how you can do that:
+
+```tsx
+  const { pathname, query, locale, locale } = useRouter()
+
+  return (
+    <Head>
+      {locales.map((l) => l !== locale && <link rel="alternate" hrefLang={l} href={fileUrlToUrl({ pathname, query }, l)} />)}
+    </Head>
+  )
+```
+
+You can do it in the `_app` component if you are sure to do that for all your pages. You can also use a dedicated package, like [next-seo](https://github.com/garmeeh/next-seo).
+
+See [this article about alternate and canonical pages](https://hreflang.org/use-hreflang-canonical-together/)
+
+#### Sitemap
+
+See [@JacbSoderblom's suggestion](https://github.com/hozana/next-translate-routes/issues/21#issuecomment-1265056041)
 
 #### Constrained dynamic paths segments
 
@@ -275,15 +336,19 @@ It can be done for some lang only and not others.
 }
 ```
 
-/!\ Ignoring a path segment can cause troubles.  
-Ex. Given the /a/[b]/[c] and /a/[b]/[c]/d file paths. [b] is ignored and the b param is merged with the c param: ":b-:c".  
-Then /a/b/c will be redirected to /a/b-c and that is fine.  
-But /a/b-c/d will be redirected to /a/b-c-d and that is not fine.
+⚠️ Ignoring a path segment can cause troubles with the **redirections**.
 
-To handle this case, one can add a path-to-regex pattern to the default ignore token. Ex: '.(\\\\d+)', or '.(\\[\\^-\\]+)'.  
-This path-to-regex pattern will be added after the segment name in the redirect.  
-Then /a/b(\\d+)/c will be redirected to /a/b-c, and /a/b-c/d will not be redirected to /a/b-c-d.  
-/!\ This is only handled in default paths (i.e. "/": ".(\\\\d+)" or "/": { "default": ".(\\\\d+)" }), not in lang-specific paths.
+Ex: given the `/a/[b]/[c]` and `/a/[b]/[c]/d` file paths where `[b]` is ignored and the b param is merged with the c param: `:b-:c`.
+`/a/:b/:c` => `/a/:b-:c` and `/a/:b/:c/d` => `/a/:b-:c/d`
+Then `/a/bb/11` will be redirected to `/a/bb-11` and `/a/bb/11/d` to `/a/bb-11/d` and that is fine.
+But then `/a/bb-11/d` will match `/a/:b-:c` and be redirected to `/a/bb-11-d` and that is not fine!
+
+To handle this case, one can add a path-to-regex pattern to the default ignore token: `.(\\d+)`, or `.(\[\^-\]+)`, or `.(what|ever)`.
+This path-to-regex pattern will be added after the segment name in the redirect.
+`/a/:b(\[\^-\]+)/:c` => `/a/:b-:c` and `/a/:b(\[\^-\]+)/:c/d` => `/a/:b-:c/d`
+Then `/a/bb-11/d` will no more match `/a/[b]/[c]` (`/a/:b(\[\^-\]+)/:c`). `#ignorePattern`
+
+⚠️ This is only handled in default paths (i.e. `"/": ".(\\d+)"` or `"/": { "default": ".(\\d+)" }`), not in lang-specific paths.
 
 #### Complex paths segments
 
@@ -345,44 +410,179 @@ type TRouteBranch<Locale extends string> = {
 
 #### Outside Next
 
-One might need to mock next-translate-routes outside Next, for example in [Storybook](https://storybook.js.org/).
-It is possible as follow:
+You might need to mock next-translate-routes outside Next, for example for testing or in [Storybook](https://storybook.js.org/).
+
+First, you need to create next-translate-routes data. You can do it using the `createNtrData` helper, but it only works in node environment. It takes the next config as first parameter. The second parameter is optional and allows to use a custom pages folder: if omitted, `createNtrData` will look for you next `pages` folder.
 
 ```typescript
-import { RouterContext } from 'next/dist/shared/lib/router-context'
-import withTranslateRoutes from 'next-translate-routes'
+import { createNtrData } from 'next-translate-routes/plugin`
+import nextConfig from '../next.config.js'
 
-  //[...]
-
-  const TranslateRoutes = withTranslateRoutes(
-    {
-      defaultLocale: 'fr',
-      debug: true,
-      locales: ['fr', 'en', 'es', 'pt'],
-      routesTree: { name: '/', paths: { default: '/' } }, // Mocked routes tree
-    },
-    ({ children }) => <>{children}</>,
-  )
-
-  return (
-    <RouterContext.Provider value={Router.router}>
-      <TranslateRoutes pageProps={{}} router={Router.router}>
-        {children}
-      </TranslateRoutes>
-    </RouterContext.Provider>
-  )
-
-  // [...]
+const ntrData = createNtrData(
+  nextConfig,
+  path.resolve(process.cwd(), './fixtures/pages'),
+)
 ```
 
-For Storybook, this piece of code can be used to create a decorator function.
+Then, if you want to render you app, you need to inject the router context, then (and only then) inject next-translate-routes. You can do it manually, or using `next-tranlate-routes/loader` with Webpack.
 
-## How does it works
+##### Manually
+
+You will have to execute createNtrData in a node script and store the result somewhere that can be imported.
+
+```typescript
+// nextRouterMock.ts
+import withTranslateRoutes from 'next-translate-routes'
+import { RouterContext } from 'next/dist/shared/lib/router-context'
+import ntrData from 'path/to/your/ntrData'
+
+//[...]
+
+const RouteTranslationsProvider = withTranslateRoutes(ntrData, ({ children }) => <>{children}</>)
+
+const TranslatedRoutesProvider = ({ children }) => (
+  <RouterContext.Provider value={routerMock}>
+    <RouteTranslationsProvider router={routerMock}>{children}</RouteTranslationsProvider>
+  </RouterContext.Provider>
+)
+
+// [...]
+```
+
+For Storybook, this piece of code can be used to create a decorator function:
+
+```typescript
+export const WithNextRouter: DecoratorFn = (Story, context): JSX.Element => (
+  <TranslatedRoutesProvider routerMock={createRouterFromContext(context)}>
+    <Story />
+  </TranslatedRoutesProvider>
+)
+```
+
+##### With `next-translate-routes/loader` for Webpack
+
+`next-translate-routes/loader` allows to create next-translate-routes data at build time. So you can do exactly the same as described in the [Manually](#manually) paragraph above, but you don't need to create and add `ntrData` as an argument to `withTranslateRoutes`.
+
+```typescript
+// nextRouterMock.ts
+import withTranslateRoutes from 'next-translate-routes'
+import { RouterContext } from 'next/dist/shared/lib/router-context'
+
+//[...]
+
+const RouteTranslationsProvider = withTranslateRoutes(({ children }) => <>{children}</>)
+
+// TranslatedRoutesProvider is the same as in the manually paragraph above
+
+// [...]
+```
+
+Then all you have to do is to add this rule in your webpack config:
+
+```js
+// storybook/config/webpack.config.js for exemple
+
+const { createNtrData } = require('next-translate-routes/plugin')
+const nextConfig = require('../../next.config') // Your project nextConfig
+
+module.exports = ({ config }) => {
+  // [...]
+
+  config.module.rules.push({
+    test: /path\/to\/nextRouterMock/, // ⚠️ Warning! This test should only match the file where withTranslateRoutes is used! If you cannot, set the mustMatch option to false.
+    use: {
+      loader: 'next-translate-routes/loader',
+      options: { data: createNtrData(nextConfig) },
+    },
+  })
+
+  return config
+}
+```
+
+> ⚠️ Warning! The rule `test` should only match the file where `withTranslateRoutes` is used! If you cannot, then set the `mustMatch` loader option to `false`.
+
+### Fallback languages
+
+You can define fallback languages in next-translate-routes config [as you would in i18next](https://www.i18next.com/principles/fallback#fallback-to-different-languages), using `fallbackLng`, that can take either a string (ex: `'fr'`), an array (ex: `['fr', 'en']`), or an object (ex: `{ default: ['en'], 'de-CH': ['fr'] }`), but unlike i18next, `fallbackLng` cannot be a function.
+
+```javascript
+// next.config.js
+const withTranslateRoutes = require('next-translate-routes')
+
+module.exports = withTranslateRoutes({
+  // Next i18n config (mandatory): https://nextjs.org/docs/advanced-features/i18n-routing
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'fr', 'de', 'de-AT', 'de-DE', 'de-CH'],
+  },
+
+  translateRoutes: {
+    fallbackLng: {
+      default: ['en'],
+      'de-AT': ['de'],
+      'de-DE': ['de'],
+      'de-CH': ['de', 'fr'],
+    },
+  },
+
+  // ...Remaining next config
+})
+```
+
+It can avoid having `routes.json` files looking like:
+
+```json
+{
+  "/": {
+    "de": "produkt",
+    "de-AT": "produkt",
+    "de-DE": "produkt",
+    "de-CH": "produkt"
+  }
+}
+```
+
+## Known issues
+
+### Middleware with watcher (Next >=12.2.0)
+
+Unfortunately, Next new middleware syntax (stable) has a bug when using a "matcher" and rewrites.
+You can keep track of this issue:
+
+- [in next-translate-routes repo](https://github.com/hozana/next-translate-routes/issues/19)
+- [in next.js repo](https://github.com/vercel/next.js/issues/39531)
+
+So if you want to use a middleware with Next >= 12.2.0, you need to remove any watcher option and filter from within the middleware using [conditional statements](https://nextjs.org/docs/advanced-features/middleware#conditional-statements).
+
+### Optional catch-all with rewrites
+
+[Another issue in Next.js](https://github.com/vercel/next.js/issues/41624) messed some optional catch all routes when they are rewritten: it has been fixed starting from 13.0.4.
+
+### With @sentry/nextjs
+
+@sentry/nextjs inject a webpack loader that replaces all pages content with a proxy, including \_app. If it does it before next-translate-routes loader execution, the latter won't be able to do its job.
+
+So the wrapping order in next.config.js is important!
+
+Works:
+
+```js
+module.exports = withTranslateRoutes(withSentryConfig(nextConfig, sentryWebpackPluginOptions))
+```
+
+Does NOT work:
+
+```js
+module.exports = withSentryConfig(withTranslateRoutes(nextConfig), sentryWebpackPluginOptions)
+```
+
+## How does it work
 
 - Next-translate-routes plugin parses the page folder and builds a routes tree object that contains the path tree and the information in the `_routes.json` files.
 - The plugin then uses this information to build optimized redirects and rewrites, then add them to the next config object.
 - Rewrites take care of displaying the right page for the translates urls, redirects take care of the urls that would give an unwanted access to the pages (and would create duplicated content).
-- The plugin adds a webpack loader for the pages/_app file. This loader adds a data object (containing the routes tree object along with other config) as first argument of the `withTranslateRoutes` high order component that wrap the app.
+- The plugin adds a webpack loader for the pages/\_app file. This loader adds a data object (containing the routes tree object along with other config) as first argument of the `withTranslateRoutes` high order component that wrap the app.
 - `withTranslateRoutes` makes this data available as a global variable, `__NEXT_TRANSLATE_ROUTES_DATA`.
 - The `translateUrl` function uses this data to translate routes.
 - The `next-translate-routes/link` leverages the `translateUrl` function to set the `as` prop of `next/link` to the translated url so that the link is aware of the true url destination (which is then available on hover, or on right-click - copy link for example).

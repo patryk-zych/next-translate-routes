@@ -14,6 +14,26 @@
       }
     },
     {
+      "name": "contact",
+      "paths": {
+        "default": "contact"
+      }
+    },
+    {
+      "name": "faq",
+      "paths": {
+        "default": "faq",
+        "en": "FAQ",
+        "fr": "FAQ"
+      }
+    },
+    {
+      "name": "index",
+      "paths": {
+        "default": "index"
+      }
+    },
+    {
       "name": "auth",
       "paths": {
         "default": "auth"
@@ -32,6 +52,40 @@
               }
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "catch-all",
+      "paths": {
+        "default": "catch-all",
+        "fr": "tout",
+        "es": "todo",
+        "pt": "tudo"
+      },
+      "children": [
+        {
+          "name": "[...path]",
+          "paths": {
+            "default": ":path+"
+          }
+        }
+      ]
+    },
+    {
+      "name": "catch-all-or-none",
+      "paths": {
+        "default": "catch-all-or-none",
+        "fr": "tout-ou-rien",
+        "es": "todo-o-nada",
+        "pt": "tudo-ou-nada"
+      },
+      "children": [
+        {
+          "name": "[[...path]]",
+          "paths": {
+            "default": ":path*"
+          }
         }
       ]
     },
@@ -95,43 +149,6 @@
       ]
     },
     {
-      "name": "contact",
-      "paths": {
-        "default": "contact"
-      }
-    },
-    {
-      "name": "faq",
-      "paths": {
-        "default": "faq",
-        "en": "FAQ",
-        "fr": "FAQ"
-      }
-    },
-    {
-      "name": "feast-days",
-      "paths": {
-        "default": "feast-days",
-        "fr": "fetes",
-        "es": "fiestas",
-        "pt": "festas"
-      },
-      "children": [
-        {
-          "name": "[[...path]]",
-          "paths": {
-            "default": ":path*"
-          }
-        }
-      ]
-    },
-    {
-      "name": "index",
-      "paths": {
-        "default": "index"
-      }
-    },
-    {
       "children": [
         {
           "name": "favorites",
@@ -149,6 +166,21 @@
         "es": "mi-cuenta",
         "fr": "mon-compte"
       }
+    },
+    {
+      "name": "news",
+      "paths": {
+        "default": "news",
+        "fr": "actualites"
+      },
+      "children": [
+        {
+          "name": "[...newsPathPart]",
+          "paths": {
+            "default": ":newsPathPart+"
+          }
+        }
+      ]
     }
   ]
 }

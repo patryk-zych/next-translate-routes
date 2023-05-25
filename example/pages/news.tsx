@@ -1,6 +1,6 @@
-import React from 'react'
 import { InferGetServerSidePropsType, NextPage } from 'next'
 import Link from 'next-translate-routes/link'
+import React from 'react'
 
 import Layout from '../components/Layout'
 
@@ -26,9 +26,7 @@ const NewsPage: NextPage<InferGetServerSidePropsType<typeof getServerSideProps>>
       </p>
     ))}
     <p>
-      <Link href="/">
-        <a>Go home</a>
-      </Link>
+      <Link href="/">Go home</Link>
     </p>
   </Layout>
 )

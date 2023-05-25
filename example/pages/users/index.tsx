@@ -1,13 +1,15 @@
-import React from 'react'
 import { GetStaticProps, InferGetStaticPropsType, NextPage } from 'next'
 import Link from 'next-translate-routes/link'
+import React from 'react'
 
-import { User } from '../../interfaces'
-import { sampleUserData } from '../../utils/sample-data'
 import Layout from '../../components/Layout'
 import List from '../../components/List'
+import { User } from '../../interfaces'
+import { sampleUserData } from '../../utils/sample-data'
 
-export const getStaticProps: GetStaticProps<{ items: User[] }> = async () => ({ props: { items: sampleUserData } })
+export const getStaticProps: GetStaticProps<{ items: User[] }> = async () => {
+  return { props: { items: sampleUserData } }
+}
 
 const UsersPage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({ items }) => (
   <Layout title="Users List | Next.js + TypeScript Example">
@@ -18,9 +20,7 @@ const UsersPage: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({ i
     <p>You are currently on: /users</p>
     <List items={items} />
     <p>
-      <Link href="/">
-        <a>Go home</a>
-      </Link>
+      <Link href="/">Go home</Link>
     </p>
   </Layout>
 )
